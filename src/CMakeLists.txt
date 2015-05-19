@@ -1,0 +1,12 @@
+cmake_minimum_required (VERSION 2.8)
+
+INCLUDE_DIRECTORIES(${LIBXML2_INCLUDE_DIR})
+
+AUTO_SOURCES(files "*.cc" "RECURSE" "${CMAKE_CURRENT_SOURCE_DIR}")
+LIST(APPEND yalibhdfs_SOURCES ${files})
+
+AUTO_SOURCES(files "*.h" "RECURSE" "${CMAKE_CURRENT_SOURCE_DIR}")
+LIST(APPEND yalibhdfs_SOURCES ${files})
+
+ADD_LIBRARY(yalibhdfs STATIC ${yalibhdfs_SOURCES} )
+ADD_LIBRARY(libhdfs SHARED ${yalibhdfs_SOURCES} )
