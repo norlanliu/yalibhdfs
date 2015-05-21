@@ -20,7 +20,14 @@
 #ifndef CLIENT_FILE_SYSTEM_H_
 #define CLIENT_FILE_SYSTEM_H_
 
+
+#include "configuration.h"
+
+class string;
+
 namespace hdfs{
+
+	class FileSystemImpl;
 
 	/*
 	 * =====================================================================================
@@ -32,18 +39,23 @@ namespace hdfs{
 	{
 		public:
 			/* ====================  LIFECYCLE     ======================================= */
-			FileSystem ();                             /* constructor */
+			FileSystem (const Configuration& conf);                             /* constructor */
 			~FileSystem();
 
 			/* ====================  OPERATORS     ======================================= */
 			void connect();
 
-			void connect(const char* uri, const char* username);
+			void connect(const char* uri);
+
+			void connect(const char* uri, const char* username, const char* token);
 
 		private:
-			/* ====================  METHODS       ======================================= */
 
+			FileSystemImpl* InitialFSImpl(const char* uri, const std::string& principal);
 			/* ====================  DATA MEMBERS  ======================================= */
+			FileSystemImpl* _fs_impl;
+
+			Configuration _conf;
 
 	}; /* -----  end of class FileSystem  ----- */
 

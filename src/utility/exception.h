@@ -64,6 +64,22 @@ namespace hdfs{
 			~HdfsConfigNotFound() throw(){
 			}
 	};
+	class HdfsConfigInvalid: public HdfsException {
+		public:
+			HdfsConfigInvalid(const std::string& arg, const char* file, int line):
+				HdfsException(arg, file, line){
+			}
+			~HdfsConfigInvalid() throw(){
+			}
+	};
+	class InvalidParameter: public HdfsException {
+		public:
+			InvalidParameter(const std::string& arg, const char* file, int line):
+				HdfsException(arg, file, line){
+			}
+			~InvalidParameter() throw(){
+			}
+	};
 }
 
 

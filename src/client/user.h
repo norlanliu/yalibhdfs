@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  FileSystemImpl.h
+ *       Filename:  user.h
  *
- *    Description:  
+ *    Description:  user 
  *
  *        Version:  1.0
- *        Created:  05/19/2015 04:08:07 PM
+ *        Created:  05/21/2015 09:48:47 AM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -18,40 +18,43 @@
  * =====================================================================================
  */
 
-#ifndef CLIENT_FILE_SYSTEM_IMPL_H_
-#define CLIENT_FILE_SYSTEM_IMPL_H_
-#include "fskey.h"
-#include "config_internal.h"
+#ifndef CLIENT_USER_H_
+#define CLIENT_USER_H_
+
+#include <string>
 
 namespace hdfs{
-
-	class NameNode;
 	
 	/*
 	 * =====================================================================================
-	 *        Class:  FileSystemImpl
+	 *        Class:  User
 	 *  Description:  
 	 * =====================================================================================
 	 */
-	class FileSystemImpl
+	class User
 	{
 		public:
 			/* ====================  LIFECYCLE     ======================================= */
-			FileSystemImpl (const FSKey& key, const Configuration& conf);                             /* constructor */
-			~FileSystemImpl();
+			User ();                             /* constructor */
+
+			/* ====================  ACCESSORS     ======================================= */
+			void setClientUser(const std::string& user);
+
+			const std::string& getClientUser() const{
+				return _client_user;
+			}
+
+			/* ====================  MUTATORS      ======================================= */
 
 			/* ====================  OPERATORS     ======================================= */
-			void connect();
+
+			static User LocalUser();
 
 		private:
-			/* ====================  METHODS       ======================================= */
-
 			/* ====================  DATA MEMBERS  ======================================= */
-			FSKey _key;
-			ConfigurationInternal _conf_inter;
-			NameNode* _name_node;
+			std::string _client_user;
 
-	}; /* -----  end of class FileSystemImpl  ----- */
+	}; /* -----  end of class User  ----- */
 
 }
 

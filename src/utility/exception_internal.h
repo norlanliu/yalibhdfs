@@ -28,6 +28,8 @@
 #include <string>
 #include <sstream>
 #include <unistd.h>
+
+#include <glog/logging.h>
 #define PATH_SEPRATOR '/'
 
 #define TERMINATE(throwable, fmt, ...) do{\
@@ -41,7 +43,7 @@
 namespace hdfs{
 
 	inline static const char* SkipPath(const char* path){
-		int i, len = strlen(path);
+		int i, len = static_cast<int>(strlen(path));
 		for(i = len - 1; i > 0 && path[i] != PATH_SEPRATOR; --i){
 		}
 		assert(i > 0 && i < len);
@@ -56,7 +58,7 @@ namespace hdfs{
 			buffer += ": ";
 			int size = vsnprintf(NULL, 0, fmt, ap);
 			va_end(ap);
-			int offset = buffer.size();
+			int offset = static_cast<int>(buffer.size());
 			buffer.resize(offset + size + 1);
 			va_start(ap, fmt);
 			vsnprintf(&buffer[offset], size+1, fmt, ap);
@@ -73,13 +75,13 @@ namespace hdfs{
 			buffer += ": ";
 			int size = vsnprintf(NULL, 0, fmt, ap);
 			va_end(ap);
-			int offset = buffer.size();
+			int offset = static_cast<int>(buffer.size());
 			buffer.resize(offset + size + 1);
 			va_start(ap, fmt);
 			vsnprintf(&buffer[offset], size+1, fmt, ap);
 			va_end(ap);
 
-			std::terminate();
+			LOG(FATAL) << throwable(buffer.c_str(), SkipPath(file), line).message();
 		}
 }
 #endif

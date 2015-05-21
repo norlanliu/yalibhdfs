@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  xmlparser.cc
+ *       Filename:  configuration.cc
  *
  *    Description:  
  *
  *        Version:  1.0
- *        Created:  05/19/2015 04:53:48 PM
+ *        Created:  05/20/2015 07:22:15 PM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -18,23 +18,22 @@
  * =====================================================================================
  */
 
-#include "xmlparser.h"
+#include "configuration.h"
 
+#include <cassert>
+#include <errno.h>
+#include <fstream>
+#include <limits>
 #include <string.h>
 #include <unistd.h>
-#include <assert.h>
-#include <errno.h>
-#include <limits>
-#include <fstream>
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
-#include "exception_internal.h"
 #include "exception.h"
+#include "exception_internal.h"
 
 namespace hdfs{
-
 typedef std::map<std::string, std::string>::const_iterator Iterator;
 typedef std::map<std::string, std::string> Map;
 
@@ -53,7 +52,7 @@ static int32_t StrToInt32(const char * str) {
         THROW(HdfsBadNumFormat, "Underflow/Overflow int32_t type: %s", str);
     }
 
-    return retval;
+    return static_cast<int32_t>(retval);
 }
 
 static int64_t StrToInt64(const char * str) {
@@ -116,17 +115,17 @@ static void readConfigItem(xmlNodePtr root, Map & kv, const char * path) {
             continue;
         }
 
-        if (!hasname && !strcmp((const char *) curNode->name, "name")) {
+        if (!hasname && !strcmp(reinterpret_cast<const char *>(curNode->name), "name")) {
             if (NULL != curNode->children
                     && XML_TEXT_NODE == curNode->children->type) {
-                key = (const char *) curNode->children->content;
+                key = reinterpret_cast<const char *>(curNode->children->content);
                 hasname = true;
             }
         } else if (!hasvalue
-                   && !strcmp((const char *) curNode->name, "value")) {
+                   && !strcmp(reinterpret_cast<const char *>(curNode->name), "value")) {
             if (NULL != curNode->children
                     && XML_TEXT_NODE == curNode->children->type) {
-                value = (const char *) curNode->children->content;
+                value = reinterpret_cast<const char *>(curNode->children->content);
                 hasvalue = true;
             }
         } else {
@@ -142,7 +141,7 @@ static void readConfigItem(xmlNodePtr root, Map & kv, const char * path) {
         return;
     }
 
-    THROW(HdfsBadConfigFormat, "Config cannot parse configure file: \"%s\"",
+    THROW(HdfsBadConfigFormat, "Configuration cannot parse configure file: \"%s\"",
           path);
 }
 
@@ -150,8 +149,8 @@ static void readConfigItems(xmlDocPtr doc, Map & kv, const char * path) {
     xmlNodePtr root, curNode;
     root = xmlDocGetRootElement(doc);
 
-    if (NULL == root || strcmp((const char *) root->name, "configuration")) {
-        THROW(HdfsBadConfigFormat, "Config cannot parse configure file: \"%s\"",
+    if (NULL == root || strcmp(reinterpret_cast<const char *>(root->name), "configuration")) {
+        THROW(HdfsBadConfigFormat, "Configuration cannot parse configure file: \"%s\"",
               path);
     }
 
@@ -163,21 +162,21 @@ static void readConfigItems(xmlDocPtr doc, Map & kv, const char * path) {
             continue;
         }
 
-        if (strcmp((const char *) curNode->name, "property")) {
+        if (strcmp(reinterpret_cast<const char *>(curNode->name), "property")) {
             THROW(HdfsBadConfigFormat,
-                  "Config cannot parse configure file: \"%s\"", path);
+                  "Configuration cannot parse configure file: \"%s\"", path);
         }
 
         readConfigItem(curNode->children, kv, path);
     }
 }
 
-XmlParser::XmlParser(const char * p) :
+Configuration::Configuration(const char * p) :
     path(p) {
     update(p);
 }
 
-void XmlParser::update(const char * p) {
+void Configuration::update(const char * p) {
     char msg[64];
     xmlDocPtr doc; /* the resulting document tree */
     LIBXML_TEST_VERSION
@@ -197,7 +196,7 @@ void XmlParser::update(const char * p) {
         /* check if parsing succeeded */
         if (doc == NULL) {
             THROW(HdfsBadConfigFormat,
-                  "Config cannot parse configure file: \"%s\"", path.c_str());
+                  "Configuration cannot parse configure file: \"%s\"", path.c_str());
         } else {
             readConfigItems(doc, kv, path.c_str());
             /* free up the resulting document */
@@ -209,17 +208,17 @@ void XmlParser::update(const char * p) {
     }
 }
 
-const char * XmlParser::getString(const char * key) const {
+const char * Configuration::getString(const char * key) const {
     Iterator it = kv.find(key);
 
     if (kv.end() == it) {
-        THROW(HdfsConfigNotFound, "Config key: %s not found", key);
+        THROW(HdfsConfigNotFound, "Configuration key: %s not found", key);
     }
 
     return it->second.c_str();
 }
 
-const char * XmlParser::getString(const char * key, const char * def) const {
+const char * Configuration::getString(const char * key, const char * def) const {
     Iterator it = kv.find(key);
 
     if (kv.end() == it) {
@@ -229,33 +228,33 @@ const char * XmlParser::getString(const char * key, const char * def) const {
     }
 }
 
-const char * XmlParser::getString(const std::string & key) const {
+const char * Configuration::getString(const std::string & key) const {
     return getString(key.c_str());
 }
 
-const char * XmlParser::getString(const std::string & key,
+const char * Configuration::getString(const std::string & key,
                                const std::string & def) const {
     return getString(key.c_str(), def.c_str());
 }
 
-int64_t XmlParser::getInt64(const char * key) const {
+int64_t Configuration::getInt64(const char * key) const {
     int64_t retval;
     Iterator it = kv.find(key);
 
     if (kv.end() == it) {
-        THROW(HdfsConfigNotFound, "Config key: %s not found", key);
+        THROW(HdfsConfigNotFound, "Configuration key: %s not found", key);
     }
 
     try {
         retval = StrToInt64(it->second.c_str());
     } catch (const HdfsBadNumFormat & e) {
-        TERMINATE(HdfsConfigNotFound, "Config key: %s not found", key);
+        TERMINATE(HdfsConfigNotFound, "Configuration key: %s not found", key);
     }
 
     return retval;
 }
 
-int64_t XmlParser::getInt64(const char * key, int64_t def) const {
+int64_t Configuration::getInt64(const char * key, int64_t def) const {
     int64_t retval;
     Iterator it = kv.find(key);
 
@@ -266,30 +265,30 @@ int64_t XmlParser::getInt64(const char * key, int64_t def) const {
     try {
         retval = StrToInt64(it->second.c_str());
     } catch (const HdfsBadNumFormat & e) {
-        TERMINATE(HdfsConfigNotFound, "Config key: %s not found", key);
+        TERMINATE(HdfsConfigNotFound, "Configuration key: %s not found", key);
     }
 
     return retval;
 }
 
-int32_t XmlParser::getInt32(const char * key) const {
+int32_t Configuration::getInt32(const char * key) const {
     int32_t retval;
     Iterator it = kv.find(key);
 
     if (kv.end() == it) {
-        THROW(HdfsConfigNotFound, "Config key: %s not found", key);
+        THROW(HdfsConfigNotFound, "Configuration key: %s not found", key);
     }
 
     try {
         retval = StrToInt32(it->second.c_str());
     } catch (const HdfsBadNumFormat & e) {
-        TERMINATE(HdfsConfigNotFound, "Config key: %s not found", key);
+        TERMINATE(HdfsConfigNotFound, "Configuration key: %s not found", key);
     }
 
     return retval;
 }
 
-int32_t XmlParser::getInt32(const char * key, int32_t def) const {
+int32_t Configuration::getInt32(const char * key, int32_t def) const {
     int32_t retval;
     Iterator it = kv.find(key);
 
@@ -300,30 +299,30 @@ int32_t XmlParser::getInt32(const char * key, int32_t def) const {
     try {
         retval = StrToInt32(it->second.c_str());
     } catch (const HdfsBadNumFormat & e) {
-        TERMINATE(HdfsConfigNotFound, "Config key: %s not found", key);
+        TERMINATE(HdfsConfigNotFound, "Configuration key: %s not found", key);
     }
 
     return retval;
 }
 
-double XmlParser::getDouble(const char * key) const {
+double Configuration::getDouble(const char * key) const {
     double retval;
     Iterator it = kv.find(key);
 
     if (kv.end() == it) {
-        THROW(HdfsConfigNotFound, "Config key: %s not found", key);
+        THROW(HdfsConfigNotFound, "Configuration key: %s not found", key);
     }
 
     try {
         retval = StrToDouble(it->second.c_str());
     } catch (const HdfsBadNumFormat & e) {
-        TERMINATE(HdfsConfigNotFound, "Config key: %s not found", key);
+        TERMINATE(HdfsConfigNotFound, "Configuration key: %s not found", key);
     }
 
     return retval;
 }
 
-double XmlParser::getDouble(const char * key, double def) const {
+double Configuration::getDouble(const char * key, double def) const {
     double retval;
     Iterator it = kv.find(key);
 
@@ -334,30 +333,30 @@ double XmlParser::getDouble(const char * key, double def) const {
     try {
         retval = StrToDouble(it->second.c_str());
     } catch (const HdfsBadNumFormat & e) {
-        TERMINATE(HdfsConfigNotFound, "Config key: %s not found", key);
+        TERMINATE(HdfsConfigNotFound, "Configuration key: %s not found", key);
     }
 
     return retval;
 }
 
-bool XmlParser::getBool(const char * key) const {
+bool Configuration::getBool(const char * key) const {
     bool retval;
     Iterator it = kv.find(key);
 
     if (kv.end() == it) {
-        THROW(HdfsConfigNotFound, "Config key: %s not found", key);
+        THROW(HdfsConfigNotFound, "Configuration key: %s not found", key);
     }
 
     try {
         retval = StrToBool(it->second.c_str());
-    } catch (const HdfsBadNumFormat& e) {
-        TERMINATE(HdfsConfigNotFound, "Config key: %s not found", key);
+    } catch (const HdfsBadNumFormat & e) {
+        TERMINATE(HdfsConfigNotFound, "Configuration key: %s not found", key);
     }
 
     return retval;
 }
 
-bool XmlParser::getBool(const char * key, bool def) const {
+bool Configuration::getBool(const char * key, bool def) const {
     bool retval;
     Iterator it = kv.find(key);
 
@@ -368,10 +367,11 @@ bool XmlParser::getBool(const char * key, bool def) const {
     try {
         retval = StrToBool(it->second.c_str());
     } catch (const HdfsBadNumFormat & e) {
-        TERMINATE(HdfsConfigNotFound, "Config key: %s not found", key);
+        TERMINATE(HdfsConfigNotFound, "Configuration key: %s not found", key);
     }
 
     return retval;
 }
+
 
 }

@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  FileSystemImpl.h
+ *       Filename:  fskey.h
  *
- *    Description:  
+ *    Description:  filesystem connection key
  *
  *        Version:  1.0
- *        Created:  05/19/2015 04:08:07 PM
+ *        Created:  05/21/2015 09:21:37 AM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -18,40 +18,50 @@
  * =====================================================================================
  */
 
-#ifndef CLIENT_FILE_SYSTEM_IMPL_H_
-#define CLIENT_FILE_SYSTEM_IMPL_H_
-#include "fskey.h"
-#include "config_internal.h"
+#ifndef CLIENT_FSKEY_H_
+#define CLIENT_FSKEY_H_
+#include <string>
+#include "user.h"
 
 namespace hdfs{
-
-	class NameNode;
 	
 	/*
 	 * =====================================================================================
-	 *        Class:  FileSystemImpl
+	 *        Class:  FSKey
 	 *  Description:  
 	 * =====================================================================================
 	 */
-	class FileSystemImpl
+	class FSKey
 	{
 		public:
 			/* ====================  LIFECYCLE     ======================================= */
-			FileSystemImpl (const FSKey& key, const Configuration& conf);                             /* constructor */
-			~FileSystemImpl();
+			FSKey (const std::string& uri, const char* user );                             /* constructor */
+
+			/* ====================  ACCESSORS     ======================================= */
+			const std::string getHost() const{
+				return _host;
+			}
+
+			const std::string getPort() const{
+				return _port;
+			}
+
+			const std::string getScheme() const{
+				return _scheme;
+			}
+			/* ====================  MUTATORS      ======================================= */
 
 			/* ====================  OPERATORS     ======================================= */
-			void connect();
 
 		private:
-			/* ====================  METHODS       ======================================= */
-
 			/* ====================  DATA MEMBERS  ======================================= */
-			FSKey _key;
-			ConfigurationInternal _conf_inter;
-			NameNode* _name_node;
+			std::string _authority; //authrity string
+			std::string _port;
+			std::string _host;
+			std::string _scheme;
+			User _user;
 
-	}; /* -----  end of class FileSystemImpl  ----- */
+	}; /* -----  end of class FSKey  ----- */
 
 }
 

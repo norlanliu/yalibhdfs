@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  xmlparser.h
+ *       Filename:  configuration.h
  *
- *    Description:  parse configure xml file
+ *    Description:  
  *
  *        Version:  1.0
- *        Created:  05/19/2015 04:47:28 PM
+ *        Created:  05/20/2015 07:10:59 PM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -18,30 +18,27 @@
  * =====================================================================================
  */
 
-#ifndef UTILITY_XML_PARSER_H_
-#define UTILITY_XML_PARSER_H_
+#ifndef CLIENT_CONFIGURATION_H_
+#define CLIENT_CONFIGURATION_H_
 
 #include <stdint.h>
 #include <string>
 #include <map>
 #include <sstream>
 
-
 namespace hdfs{
 
 	/*
 	 * =====================================================================================
-	 *        Class:  XmlParser
+	 *        Class:  Configuration
 	 *  Description:  parser xml file
 	 * =====================================================================================
 	 */
-	class XmlParser
+	class Configuration
 	{
 		public:
 			/* ====================  LIFECYCLE     ======================================= */
-			XmlParser ();                             /* constructor */
-
-			XmlParser (const char* path);			/* constructor */
+			Configuration (const char* path);			/* constructor */
 
 			 /**
 			 * Parse the configure file.
@@ -169,8 +166,6 @@ namespace hdfs{
 			std::string path;
 			std::map<std::string, std::string> kv;
 
-	}; /* -----  end of class XmlParser  ----- */
-
+	}; /* -----  end of class Configuration  ----- */
 }
-
 #endif
